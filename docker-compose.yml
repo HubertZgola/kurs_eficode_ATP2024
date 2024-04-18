@@ -1,0 +1,36 @@
+services:
+  jira:
+    container_name: jira
+    image: atlassian/jira-software:9.12
+    ports:
+      - "8000:8080"
+    volumes:
+      - jira_data:/var/atlassian/application-data/jira
+    environment:
+      - JVM_MINIMUM_MEMORY=2048m
+      - JVM_MAXIMUM_MEMORY=4096m
+    depends_on:
+      jira_db:
+        condition: service_healthy
+  jira_db:
+    image: postgres:15-alpine
+    container_name: jira_db
+    environment:
+      - POSTGRES_DB=jira_db
+      - POSTGRES_USER=jira
+      - POSTGRES_PASSWORD=sphere
+    volumes:
+      - jira_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready --dbname=jira_db --username=jira && psql --username=jira --list"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jira_data:
+  jira_db_data:
